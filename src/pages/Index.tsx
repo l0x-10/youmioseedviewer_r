@@ -13,7 +13,7 @@ import {
   sortListings,
 } from '@/utils/api';
 
-const DONATION_WALLET = '0x6C38ED25778a2341ABe9B6eEe6112151c7F189E5';
+const DONATION_WALLET = '0x2d96908f3FC1f03213300a4D249C2D2ac5cF4154';
 
 export default function Index() {
   const [nftType, setNftType] = useState<NFTType>('Mythic');
