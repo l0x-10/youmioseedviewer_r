@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Scroll, ArrowUp, Gift } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Scroll, ArrowUp, Gift, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { FilterControls } from '@/components/FilterControls';
 import { NFTGrid } from '@/components/NFTGrid';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   NFTType,
   SortType,
@@ -13,7 +15,7 @@ import {
   sortListings,
 } from '@/utils/api';
 
-const DONATION_WALLET = '0x2d96908f3FC1f03213300a4D249C2D2ac5cF4154';
+const DONATION_WALLET = '0x6C38ED25778a2341ABe9B6eEe6112151c7F189E5';
 
 export default function Index() {
   const [nftType, setNftType] = useState<NFTType>('Mythic');
@@ -111,11 +113,22 @@ export default function Index() {
       <div className="container mx-auto px-4 py-8 pb-24">
         {/* Header */}
         <header className="bg-card rounded-xl shadow-card p-6 mb-8">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Scroll className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">
-              Youmio Seed Viewer
-            </h1>
+          <div className="flex items-center justify-between mb-6">
+            <div className="w-[140px]">
+              <ThemeToggle />
+            </div>
+            <div className="flex items-center gap-3">
+              <Scroll className="w-8 h-8 text-primary" />
+              <h1 className="text-4xl font-bold text-foreground">
+                Youmio Seed Viewer
+              </h1>
+            </div>
+            <Link to="/leaderboard">
+              <Button variant="outline" className="gap-2">
+                <Trophy className="w-4 h-4" />
+                Leaderboard
+              </Button>
+            </Link>
           </div>
 
           <FilterControls

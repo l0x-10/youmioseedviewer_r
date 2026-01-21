@@ -1,4 +1,5 @@
 import { NFTCard } from './NFTCard';
+import { NFTGridSkeleton } from './NFTCardSkeleton';
 import { NFTWithMetadata, calculatePointsPerPrice } from '@/utils/api';
 
 interface NFTGridProps {
@@ -9,12 +10,7 @@ interface NFTGridProps {
 
 export function NFTGrid({ listings, loading, error }: NFTGridProps) {
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 bg-card rounded-xl shadow-card">
-        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
-        <p className="text-muted-foreground text-lg">Loading NFTs...</p>
-      </div>
-    );
+    return <NFTGridSkeleton count={8} />;
   }
 
   if (error) {
@@ -43,11 +39,16 @@ export function NFTGrid({ listings, loading, error }: NFTGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {listings.map((listing, index) => (
-        <NFTCard
+        <div 
           key={`${listing.tokenId}-${index}`}
-          listing={listing}
-          isBestDeal={index === bestDealIndex && calculatePointsPerPrice(listing) > 0}
-        />
+          className="animate-fade-in-up opacity-0"
+          style={{ animationDelay: `${index * 50}ms` }}
+        >
+          <NFTCard
+            listing={listing}
+            isBestDeal={index === bestDealIndex && calculatePointsPerPrice(listing) > 0}
+          />
+        </div>
       ))}
     </div>
   );
