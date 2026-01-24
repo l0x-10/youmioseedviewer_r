@@ -1,1 +1,22 @@
 project_id = "nuidynjgfztvunkgxwbe"
+
+[functions.leaderboard-refresh]
+verify_jwt = false
+
+[functions.leaderboard-retry-zeros]
+verify_jwt = false
+
+[functions.opensea-collection-nfts]
+verify_jwt = false
+
+[functions.opensea-listings]
+verify_jwt = false
+
+[functions.opensea-nft-image]
+verify_jwt = false
+
+[functions.staking-points]
+verify_jwt = false
+
+[functions.staking-points-batch]
+verify_jwt = false

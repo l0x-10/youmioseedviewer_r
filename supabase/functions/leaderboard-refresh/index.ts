@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const OPENSEA_API_BASE = 'https://api.opensea.io/api/v2';
-const OPENSEA_API_KEY = 'fdae3233ff1545ab8d5d7041e90ed89a';
+const OPENSEA_API_KEY = Deno.env.get('OPENSEA_API_KEY') ?? '';
 const STAKING_API_BASE = 'https://staking.youmio.ai/api';
 
 const COLLECTIONS = [
@@ -268,14 +268,28 @@ Deno.serve(async (req) => {
       console.log(`[Refresh] Stored ${nfts.length} ${nftType} NFT metadata`);
     }
 
-    // Get all token IDs for this collection from DB
-    const { data: entries } = await supabase
-      .from('leaderboard_entries')
-      .select('token_id')
-      .eq('nft_type', nftType)
-      .order('token_id');
+    // Get ALL token IDs for this collection from DB (paginate to avoid 1000-row limit)
+    const tokenIds: string[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data: entriesPage, error: entriesError } = await supabase
+        .from('leaderboard_entries')
+        .select('token_id')
+        .eq('nft_type', nftType)
+        .order('token_id')
+        .range(from, from + pageSize - 1);
 
-    const tokenIds = (entries || []).map(e => e.token_id);
+      if (entriesError) {
+        console.error('[Refresh] Failed to load token_ids:', entriesError);
+        throw entriesError;
+      }
+
+      if (!entriesPage || entriesPage.length === 0) break;
+      tokenIds.push(...entriesPage.map((e: any) => e.token_id));
+      if (entriesPage.length < pageSize) break;
+      from += pageSize;
+    }
     
     if (tokenIds.length === 0) {
       // No tokens, move to next collection
