@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Scroll, ArrowUp, Gift, Trophy } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { FilterControls } from '@/components/FilterControls';
 import { NFTGrid } from '@/components/NFTGrid';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { PageLayout } from '@/components/Layout';
 import {
   NFTType,
   SortType,
@@ -14,8 +13,6 @@ import {
   fetchStakingPoints,
   sortListings,
 } from '@/utils/api';
-
-const DONATION_WALLET = '0x2d96908f3FC1f03213300a4D249C2D2ac5cF4154';
 
 export default function Index() {
   const [nftType, setNftType] = useState<NFTType>('Mythic');
@@ -27,7 +24,6 @@ export default function Index() {
   const [error, setError] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Handle scroll to top button visibility
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
@@ -41,29 +37,14 @@ export default function Index() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDonate = () => {
-    navigator.clipboard.writeText(DONATION_WALLET);
-    toast.success('Wallet address copied!', {
-      description: 'Thank you for your support! 💖',
-    });
-  };
-
   const loadNFTs = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log(`\n🔄 Starting to load ${nftType} Seed NFTs...`);
-      
-      // Fetch listings
       const fetchedListings = await fetchNFTListings(nftType);
       setListings(fetchedListings);
 
-      console.log(`\n📥 Fetched ${fetchedListings.length} unique NFTs`);
-      console.log(`ℹ️  Check OpenSea to verify count: https://opensea.io/collection/${nftType === 'Mythic' ? 'mythicseed' : 'ancientseed'}`);
-
-      // Fetch staking points for all NFTs in parallel
-      console.log('\n⭐ Fetching staking points...');
       await Promise.all(
         fetchedListings.map(async (listing) => {
           if (listing.tokenId) {
@@ -73,120 +54,65 @@ export default function Index() {
         })
       );
 
-      // Update state to trigger re-render with points
       setListings([...fetchedListings]);
-      
-      console.log(`✅ Successfully loaded ${fetchedListings.length} NFTs with staking points\n`);
-      
       toast.success('NFTs loaded successfully!');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load NFTs';
       setError(errorMessage);
-      console.error('❌ Error loading NFTs:', errorMessage);
-      toast.error('Error loading NFTs', {
-        description: errorMessage,
-      });
+      toast.error('Error loading NFTs', { description: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
-  // Update display listings when filters change
   useEffect(() => {
     let filtered = [...listings];
 
-    // Filter zero points
     if (hideZeroPoints) {
       filtered = filtered.filter(listing => 
         listing.stakingPoints && listing.stakingPoints > 0
       );
     }
 
-    // Sort
     filtered = sortListings(filtered, sortType);
-
     setDisplayListings(filtered);
   }, [listings, hideZeroPoints, sortType]);
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8 pb-24">
-        {/* Header */}
-        <header className="bg-card rounded-xl shadow-card p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="w-[140px]">
-              <ThemeToggle />
-            </div>
-            <div className="flex items-center gap-3">
-              <Scroll className="w-8 h-8 text-primary" />
-              <h1 className="text-4xl font-bold text-foreground">
-                Youmio Seed Viewer
-              </h1>
-            </div>
-            <Link to="/leaderboard">
-              <Button variant="outline" className="gap-2">
-                <Trophy className="w-4 h-4" />
-                Leaderboard
-              </Button>
-            </Link>
-          </div>
+    <PageLayout>
+      {/* Filter Controls Card */}
+      <div className="bg-card/80 backdrop-blur-md rounded-xl shadow-card p-4 md:p-6 mb-6 animate-slide-up stagger-1">
+        <FilterControls
+          nftType={nftType}
+          sortType={sortType}
+          hideZeroPoints={hideZeroPoints}
+          onNFTTypeChange={setNftType}
+          onSortTypeChange={setSortType}
+          onToggleZeroPoints={() => setHideZeroPoints(!hideZeroPoints)}
+          onLoadNFTs={loadNFTs}
+          loading={loading}
+        />
+      </div>
 
-          <FilterControls
-            nftType={nftType}
-            sortType={sortType}
-            hideZeroPoints={hideZeroPoints}
-            onNFTTypeChange={setNftType}
-            onSortTypeChange={setSortType}
-            onToggleZeroPoints={() => setHideZeroPoints(!hideZeroPoints)}
-            onLoadNFTs={loadNFTs}
-            loading={loading}
-          />
-        </header>
-
-        {/* NFT Grid */}
+      {/* NFT Grid */}
+      <div className="animate-slide-up stagger-2">
         <NFTGrid 
           listings={displayListings} 
           loading={loading} 
           error={error} 
         />
-
-        {/* Scroll to Top Button */}
-        {showScrollTop && (
-          <Button
-            onClick={scrollToTop}
-            className="fixed bottom-24 right-6 rounded-full w-12 h-12 p-0 shadow-lg gradient-primary z-50"
-            title="Scroll to top"
-          >
-            <ArrowUp className="w-5 h-5" />
-          </Button>
-        )}
       </div>
 
-      {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border py-4 px-6 shadow-lg z-40">
-        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <small className="text-muted-foreground text-center sm:text-left">
-            © <a
-              href="https://discord.com/users/1057664293065211976"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline font-semibold"
-            >
-              @l0x_10
-            </a> All rights reserved.
-          </small>
-
-          <Button
-            onClick={handleDonate}
-            variant="outline"
-            className="gradient-success text-success-foreground font-semibold border-0 shadow-sm"
-            title="Copy wallet address for donations"
-          >
-            <Gift className="w-4 h-4 mr-2" />
-            Donate (MetaMask)
-          </Button>
-        </div>
-      </footer>
-    </div>
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <Button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-4 md:right-6 rounded-full w-10 h-10 md:w-12 md:h-12 p-0 shadow-lg gradient-primary z-50 hover:scale-110 transition-transform animate-scale-in"
+          title="Scroll to top"
+        >
+          <ArrowUp className="w-4 h-4 md:w-5 md:h-5" />
+        </Button>
+      )}
+    </PageLayout>
   );
 }
