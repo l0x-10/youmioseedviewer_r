@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, TrendingUp, Star, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { 
   NFTWithMetadata, 
   getNFTName, 
   formatPrice, 
-  calculatePointsPerPrice,
+  calculatePointsPerUSD,
+  formatNumber,
+  getPriceInUSD,
   getImageUrl,
   getOpenSeaUrl
 } from '@/utils/api';
@@ -18,21 +21,22 @@ interface NFTCardProps {
 
 export function NFTCard({ listing, isBestDeal }: NFTCardProps) {
   const [imageUrl, setImageUrl] = useState<string>(
-    listing.cachedImageUrl || 'https://via.placeholder.com/300x300/667eea/ffffff?text=Loading...'
+    listing.cachedImageUrl || ''
   );
-  const [imageLoading, setImageLoading] = useState(!listing.cachedImageUrl);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   const name = getNFTName(listing);
   const price = formatPrice(listing);
+  const priceUSD = getPriceInUSD(listing);
   const points = listing.stakingPoints;
-  const ratio = calculatePointsPerPrice(listing);
+  const pointsPerUSD = calculatePointsPerUSD(listing);
   const openSeaUrl = getOpenSeaUrl(listing);
 
   useEffect(() => {
     if (!listing.cachedImageUrl) {
       getImageUrl(listing).then(url => {
         setImageUrl(url);
-        setImageLoading(false);
         listing.cachedImageUrl = url;
       });
     }
@@ -44,12 +48,18 @@ export function NFTCard({ listing, isBestDeal }: NFTCardProps) {
     }
   };
 
-  const handleImageError = () => {
-    setImageUrl(
-      `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"%3E%3Crect fill="%23667eea" width="300" height="300"/%3E%3Ctext x="50%25" y="45%25" text-anchor="middle" fill="white" font-size="24" font-family="Arial"%3ENFT Image%3C/text%3E%3Ctext x="50%25" y="55%25" text-anchor="middle" fill="white" font-size="16" font-family="Arial"%3ENot Available%3C/text%3E%3C/svg%3E`
-    );
+  const handleImageLoad = () => {
     setImageLoading(false);
+    setImageError(false);
   };
+
+  const handleImageError = () => {
+    setImageLoading(false);
+    setImageError(true);
+  };
+
+  // Fallback placeholder
+  const placeholderSvg = `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"%3E%3Crect fill="%23667eea" width="300" height="300"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="white" font-size="20" font-family="Arial" dy=".3em"%3E${encodeURIComponent(name)}%3C/text%3E%3C/svg%3E`;
 
   return (
     <Card 
@@ -73,48 +83,73 @@ export function NFTCard({ listing, isBestDeal }: NFTCardProps) {
             🏆 Best Deal
           </Badge>
         )}
-        {imageLoading && (
-          <div className="absolute inset-0 bg-secondary animate-pulse" />
+        {(imageLoading || !imageUrl) && (
+          <div className="absolute inset-0 bg-secondary animate-pulse flex items-center justify-center">
+            <span className="text-muted-foreground text-sm">Loading...</span>
+          </div>
+        )}
+        {imageError && (
+          <div className="absolute inset-0 bg-secondary flex items-center justify-center">
+            <span className="text-muted-foreground text-sm">{name}</span>
+          </div>
         )}
         <img
-          src={imageUrl}
+          src={imageUrl || placeholderSvg}
           alt={name}
-          className="w-full h-full object-cover transition-smooth hover:scale-105"
+          className={`w-full h-full object-cover transition-smooth hover:scale-105 ${imageLoading || imageError ? 'opacity-0' : 'opacity-100'}`}
           loading="lazy"
+          onLoad={handleImageLoad}
           onError={handleImageError}
+          crossOrigin="anonymous"
         />
       </div>
 
-      <div className="p-4 space-y-2">
-        <h3 
-          className="text-lg font-semibold text-foreground truncate" 
-          title={name}
-        >
-          {name}
-        </h3>
-
+      <div className="p-4 space-y-3">
+        {/* NFT Name */}
         <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-primary">
-            {price}
-          </p>
-          <ExternalLink className="w-4 h-4 text-muted-foreground" />
+          <h3 
+            className="text-lg font-semibold text-foreground truncate flex-1" 
+            title={name}
+          >
+            {name}
+          </h3>
+          <ExternalLink className="w-4 h-4 text-muted-foreground ml-2 flex-shrink-0" />
         </div>
 
-        {points !== undefined && points !== null && (
-          <div className={`px-3 py-1.5 rounded-md text-sm font-semibold ${
-            points > 0 
-              ? 'bg-success/10 text-success' 
-              : 'bg-muted text-muted-foreground'
-          }`}>
-            ⭐ {points} points
-          </div>
-        )}
+        <Separator className="bg-border/50" />
 
-        {ratio > 0 && (
-          <div className="px-3 py-1.5 rounded-md bg-accent/10 text-accent text-sm font-semibold">
-            📊 {ratio.toFixed(2)} pts/ETH
-          </div>
-        )}
+        {/* Price Section */}
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-4 h-4 text-primary" />
+          <span className="text-base font-bold text-primary">{price}</span>
+          <span className="text-sm text-muted-foreground">·</span>
+          <span className="text-sm font-medium text-muted-foreground">
+            ~${priceUSD.toFixed(0)}
+          </span>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {/* Points Badge */}
+          {points !== undefined && points !== null && (
+            <div className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold ${
+              points > 0 
+                ? 'bg-success/15 text-success border border-success/20' 
+                : 'bg-muted/50 text-muted-foreground border border-border'
+            }`}>
+              <Star className="w-3.5 h-3.5" />
+              <span>{formatNumber(points)} pts</span>
+            </div>
+          )}
+
+          {/* Points per USD */}
+          {pointsPerUSD > 0 && (
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent/15 text-accent border border-accent/20 text-sm font-semibold">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{formatNumber(Math.round(pointsPerUSD))} pts/$1</span>
+            </div>
+          )}
+        </div>
       </div>
     </Card>
   );

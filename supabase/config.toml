@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.staking-points-batch]
 verify_jwt = false
+
+[functions.eth-price]
+verify_jwt = false

@@ -273,6 +273,37 @@ export async function fetchStakingPoints(tokenId: string, nftType: NFTType): Pro
   }
 }
 
+// ETH price in USD (can be updated dynamically)
+export let ETH_PRICE_USD = 2500;
+
+export function setEthPriceUSD(price: number) {
+  ETH_PRICE_USD = price;
+}
+
+/**
+ * Format number with K/M suffix
+ * 5000 → "5K", 50000 → "50K", 1500000 → "1.5M"
+ */
+export function formatNumber(n: number): string {
+  if (n >= 1_000_000) {
+    const value = n / 1_000_000;
+    return value % 1 === 0 ? `${value}M` : `${value.toFixed(1)}M`;
+  }
+  if (n >= 1_000) {
+    const value = n / 1_000;
+    return value % 1 === 0 ? `${value}K` : `${value.toFixed(1)}K`;
+  }
+  return n.toString();
+}
+
+/**
+ * Get price in USD
+ */
+export function getPriceInUSD(listing: OpenSeaListing): number {
+  const ethPrice = getPriceValue(listing);
+  return ethPrice * ETH_PRICE_USD;
+}
+
 /**
  * Calculate points per ETH ratio
  */
@@ -281,6 +312,16 @@ export function calculatePointsPerPrice(listing: NFTWithMetadata): number {
   const price = getPriceValue(listing);
   if (price === 0 || points === 0) return 0;
   return points / price;
+}
+
+/**
+ * Calculate points per USD ratio
+ */
+export function calculatePointsPerUSD(listing: NFTWithMetadata): number {
+  const points = listing.stakingPoints || 0;
+  const priceUSD = getPriceInUSD(listing);
+  if (priceUSD === 0 || points === 0) return 0;
+  return points / priceUSD;
 }
 
 /**

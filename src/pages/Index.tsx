@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { FilterControls } from '@/components/FilterControls';
 import { NFTGrid } from '@/components/NFTGrid';
 import { PageLayout } from '@/components/Layout';
+import { useEthPrice } from '@/hooks/useEthPrice';
 import {
   NFTType,
   SortType,
@@ -12,6 +13,7 @@ import {
   fetchNFTListings,
   fetchStakingPoints,
   sortListings,
+  setEthPriceUSD,
 } from '@/utils/api';
 
 export default function Index() {
@@ -23,6 +25,12 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const { ethPrice } = useEthPrice();
+
+  // Update global ETH price when it changes
+  useEffect(() => {
+    setEthPriceUSD(ethPrice);
+  }, [ethPrice]);
 
   useEffect(() => {
     const handleScroll = () => {
