@@ -2,12 +2,12 @@ import { Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-const DONATION_WALLET = '0x2d96908f3FC1f03213300a4D249C2D2ac5cF4154';
+const DONATION_WALLET = '0x25bc6e1625B1BC5827b61a201E0e61DC6a0AD3dc';
 
 export function Footer() {
   const handleDonate = () => {
     navigator.clipboard.writeText(DONATION_WALLET);
-    toast.success('Wallet address copied!', {
+    toast.success('MetaMask Wallet address copied!', {
       description: 'Thank you for your support! 💖',
     });
   };
