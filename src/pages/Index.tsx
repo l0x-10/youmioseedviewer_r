@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { FilterControls } from '@/components/FilterControls';
 import { NFTGrid } from '@/components/NFTGrid';
+import { SalesHistory } from '@/components/SalesHistory';
 import { PageLayout } from '@/components/Layout';
 import { useEthPrice } from '@/hooks/useEthPrice';
 import {
@@ -45,7 +46,7 @@ export default function Index() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const loadNFTs = async () => {
+  const loadNFTs = async (silent = false) => {
     setLoading(true);
     setError(null);
 
@@ -63,15 +64,21 @@ export default function Index() {
       );
 
       setListings([...fetchedListings]);
-      toast.success('NFTs loaded successfully!');
+      if (!silent) toast.success('NFTs loaded successfully!');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load NFTs';
       setError(errorMessage);
-      toast.error('Error loading NFTs', { description: errorMessage });
+      if (!silent) toast.error('Error loading NFTs', { description: errorMessage });
     } finally {
       setLoading(false);
     }
   };
+
+  // Auto-load NFTs when nftType changes
+  useEffect(() => {
+    loadNFTs(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nftType]);
 
   useEffect(() => {
     let filtered = [...listings];
@@ -97,18 +104,23 @@ export default function Index() {
           onNFTTypeChange={setNftType}
           onSortTypeChange={setSortType}
           onToggleZeroPoints={() => setHideZeroPoints(!hideZeroPoints)}
-          onLoadNFTs={loadNFTs}
+          onLoadNFTs={() => loadNFTs(false)}
           loading={loading}
         />
       </div>
 
-      {/* NFT Grid */}
-      <div className="animate-slide-up stagger-2">
-        <NFTGrid 
-          listings={displayListings} 
-          loading={loading} 
-          error={error} 
-        />
+      {/* NFT Grid + Sales History */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 animate-slide-up stagger-2">
+        <div className="min-w-0">
+          <NFTGrid 
+            listings={displayListings} 
+            loading={loading} 
+            error={error} 
+          />
+        </div>
+        <aside className="xl:sticky xl:top-4 xl:self-start xl:h-[calc(100vh-2rem)]">
+          <SalesHistory nftType={nftType} />
+        </aside>
       </div>
 
       {/* Scroll to Top Button */}

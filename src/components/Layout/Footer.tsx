@@ -7,7 +7,7 @@ const DONATION_WALLET = '0x25bc6e1625B1BC5827b61a201E0e61DC6a0AD3dc';
 export function Footer() {
   const handleDonate = () => {
     navigator.clipboard.writeText(DONATION_WALLET);
-    toast.success('MetaMask Wallet address copied!', {
+    toast.success('Wallet address copied!', {
       description: 'Thank you for your support! 💖',
     });
   };
