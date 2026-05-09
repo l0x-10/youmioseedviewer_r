@@ -1,4 +1,4 @@
-# Welcome to your Youmio Seed Viewer (Lovable project)
+# Welcome to your Lovable project
 
 ## Project info
 
