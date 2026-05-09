@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { FilterControls } from '@/components/FilterControls';
 import { NFTGrid } from '@/components/NFTGrid';
 import { SalesHistory } from '@/components/SalesHistory';
+import { AdBanner } from '@/components/AdBanner';
 import { PageLayout } from '@/components/Layout';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useEthPrice } from '@/hooks/useEthPrice';
 import {
   NFTType,
@@ -95,22 +97,49 @@ export default function Index() {
 
   return (
     <PageLayout>
-      {/* Filter Controls Card */}
-      <div className="bg-card/80 backdrop-blur-md rounded-xl shadow-card p-4 md:p-6 mb-6 animate-slide-up stagger-1">
-        <FilterControls
-          nftType={nftType}
-          sortType={sortType}
-          hideZeroPoints={hideZeroPoints}
-          onNFTTypeChange={setNftType}
-          onSortTypeChange={setSortType}
-          onToggleZeroPoints={() => setHideZeroPoints(!hideZeroPoints)}
-          onLoadNFTs={() => loadNFTs(false)}
-          loading={loading}
-        />
+      {/* Centered mobile ad — only below xl */}
+      <div className="xl:hidden flex justify-center mb-4 animate-fade-in">
+        <AdBanner variant="mobile" />
       </div>
 
-      {/* NFT Grid + Sales History */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 animate-slide-up stagger-2">
+      {/* Filter Controls Card */}
+      <div className="bg-card/80 backdrop-blur-md rounded-xl shadow-card p-4 md:p-6 mb-6 animate-slide-up stagger-1">
+        <div className="flex flex-wrap gap-3 items-center justify-center">
+          <FilterControls
+            nftType={nftType}
+            sortType={sortType}
+            hideZeroPoints={hideZeroPoints}
+            onNFTTypeChange={setNftType}
+            onSortTypeChange={setSortType}
+            onToggleZeroPoints={() => setHideZeroPoints(!hideZeroPoints)}
+            onLoadNFTs={() => loadNFTs(false)}
+            loading={loading}
+          />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                className="xl:hidden gap-2 gradient-primary shadow-md hover:scale-105 transition-transform border border-primary/40 font-semibold"
+                title="Recent Sales"
+              >
+                <History className="w-4 h-4" />
+                <span className="whitespace-nowrap">Recent Sales</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
+              <div className="flex-1 min-h-0 p-3 pt-10">
+                <SalesHistory nftType={nftType} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+
+      {/* Layout: [left ad] [grid] [recent sales] [right ad] only on xl+ */}
+      <div className="grid grid-cols-1 xl:grid-cols-[120px_1fr_300px_120px] gap-4 lg:gap-6 animate-slide-up stagger-2">
+        <aside className="hidden xl:block xl:sticky xl:top-4 xl:self-start">
+          <AdBanner variant="skyscraper" />
+        </aside>
+
         <div className="min-w-0">
           <NFTGrid 
             listings={displayListings} 
@@ -118,8 +147,13 @@ export default function Index() {
             error={error} 
           />
         </div>
-        <aside className="xl:sticky xl:top-4 xl:self-start xl:h-[calc(100vh-2rem)]">
+
+        <aside className="hidden xl:block xl:sticky xl:top-4 xl:self-start xl:h-[calc(100vh-2rem)]">
           <SalesHistory nftType={nftType} />
+        </aside>
+
+        <aside className="hidden xl:block xl:sticky xl:top-4 xl:self-start">
+          <AdBanner variant="skyscraper" />
         </aside>
       </div>
 
